@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Matricule Validation Tracker</title>
+<style>
+/* Body with a sophisticated green-grey background */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  margin: 0;
+  padding: 20px;
+  min-height: 100vh;
+  /* Green-Grey gradient background for company colors */
+  background: linear-gradient(135deg, #4a6f4a, #a8bba8, #5a5a5a);
+  background-size: 400% 400%;
+  animation: gradientShift 20s ease infinite;
+  color: #222;
+}
+
+/* Animate background gradient for a dynamic look */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+h1 {
+  text-align: center;
+  color: #fff;
+  margin-bottom: 36px;
+  letter-spacing: 2px;
+  font-size: 2.3rem;
+  font-weight: 900;
+  text-shadow: 0 2px 14px rgba(42, 74, 42, 0.7), 0 1px 0 #fff2;
+}
+
+/* Grid layout for cards */
+#grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Common card style with semi-transparent background and smooth effects */
+.box {
+  background: rgba(255,255,255,0.13);
+  border-radius: 18px;
+  padding: 24px 18px 18px 18px;
+  box-shadow: 0 6px 32px rgba(34, 69, 34, 0.16), 0 1.5px 4px rgba(0,0,0,0.08);
+  cursor: pointer;
+  position: relative;
+  transition: 
+    box-shadow 0.3s cubic-bezier(.25,.8,.25,1),
+    background 0.3s cubic-bezier(.25,.8,.25,1),
+    transform 0.2s cubic-bezier(.25,.8,.25,1);
+  overflow: hidden;
+  border: 1.5px solid rgba(231,231,231,0.3);
+  backdrop-filter: blur(2.5px);
+  min-height: 120px;
+}
+
+/* Hover effect for boxes */
+.box:hover:not(.expanded) {
+  box-shadow: 0 10px 48px rgba(34, 69, 34, 0.24), 0 2px 8px rgba(0,0,0,0.13);
+  transform: translateY(-4px) scale(1.03);
+  background: rgba(255,255,255,0.18);
+}
+
+/* Green themed boxes */
+.box.green {
+  background: linear-gradient(135deg, #b1fbb1, #e9ffe9);
+  border-color: #4bb44b;
+}
+
+/* Red themed boxes */
+.box.red {
+  background: linear-gradient(135deg, #ffb1b1, #ffe9e9);
+  border-color: #e04a4a;
+}
+
+/* Grey themed boxes */
+.box.grey {
+  background: linear-gradient(135deg, #e0e0e0, #f7f7f7);
+  border-color: #c0c0c0;
+}
+
+/* Expanded box styling for details or editing */
+.box.expanded {
+  grid-column: span 2;
+  background: rgba(255,255,255,0.98);
+  color: #222;
+  cursor: default;
+  box-shadow: 0 16px 64px rgba(34, 69, 34, 0.22), 0 3px 12px rgba(0,0,0,0.18);
+  transform: scale(1.03);
+  z-index: 10;
+}
+
+/* Style for labels inside boxes */
+.matricule {
+  font-weight: 900;
+  font-size: 1.25rem;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+  color: #1e3a1e;
+  text-shadow: 0 1px 0 #fff4;
+}
+
+/* Date display style */
+.date {
+  font-size: 1.07rem;
+  margin-bottom: 14px;
+  color: #2f4f2f;
+  opacity: 0.85;
+}
+
+/* Edit section with fade-in animation */
+.edit-section {
+  display: none;
+  margin-top: 10px;
+  animation: fadeIn 0.35s;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Show edit section when expanded */
+.box.expanded .edit-section {
+  display: block;
+}
+
+/* Labels inside forms */
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 700;
+  color: #2f4f2f;
+  font-size: 1.01rem;
+  letter-spacing: 0.5px;
+}
+
+/* Date and file input styles */
+input[type="date"], input[type="file"] {
+  padding: 8px 10px;
+  font-size: 1rem;
+  width: 100%;
+  border-radius: 8px;
+  border: 1.5px solid #b2b2b2;
+  margin-bottom: 14px;
+  background: #f7fff7;
+  box-sizing: border-box;
+  transition: border-color 0.2s;
+}
+input[type="date"]:focus, input[type="file"]:focus {
+  border-color: #4bb44b;
+  outline: none;
+}
+input[type="file"] {
+  background: none;
+  padding: 4px 0;
+}
+
+/* Buttons with a sleek gradient and hover effects */
+button {
+  padding: 9px 20px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(90deg, #4bb44b, #2f4f2f);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.13);
+  font-size: 1.06rem;
+  letter-spacing: 1px;
+  transition: background 0.2s, box-shadow 0.2s;
+}
+button:hover {
+  background: linear-gradient(90deg, #6ad66a, #3b6f3b);
+  box-shadow: 0 4px 16px rgba(34,69,34,0.13);
+}
+
+/* Link to view files */
+.view-file {
+  display: inline-block;
+  margin-left: 10px;
+  color: #0b5a0b;
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 1.01rem;
+  letter-spacing: 0.5px;
+  transition: color 0.2s, text-shadow 0.2s;
+}
+.view-file:hover {
+  color: #2f4f2f;
+  text-shadow: 0 1px 2px #c8f7c8;
+}
+
+/* Export section styling */
+#export-section {
+  max-width: 1200px;
+  margin: 38px auto 0 auto;
+  text-align: center;
+  padding: 18px 0 0 0;
+}
+
+/* Select dropdown styling */
+select {
+  padding: 9px 14px;
+  font-size: 1.07rem;
+  border-radius: 8px;
+  border: 1.5px solid #b2b2b2;
+  margin-right: 10px;
+  background: #f7fff7;
+  color: #2f4f2f;
+  font-weight: 700;
+  transition: border-color 0.2s;
+}
+select:focus {
+  border-color: #4bb44b;
+  outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 650px) {
+  #grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .box.expanded {
+    grid-column: span 1;
+  }
+  h1 {
+    font-size: 1.3rem;
+    margin-bottom: 18px;
+  }
+}
+</style>
+</head>
+<body>
+<div style="text-align: center; margin-top: 20px;">
+  <button onclick="window.location.href='index.html'" style="padding:10px 20px; background-color:#4bb44b; color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:bold; box-shadow:0 2px 8px rgba(0,0,0,0.13); transition:background 0.2s;">
+    Back to First Page
+  </button>
+</div>
+<h1>Matricule Validation Tracker</h1>
+<div id="search-container" style="max-width: 960px; margin: 0 auto 20px auto; text-align: center;">
+  <input type="text" id="searchInput" placeholder="Search matricule..." aria-label="Search matricule" style="width: 60%; max-width: 400px; padding: 8px 12px; font-size: 1rem; border-radius: 8px; border: 1.5px solid #b2b2b2;" />
+</div>
+
+<div id="grid" aria-label="Matricule validation grid"></div>
+
+<div id="export-section">
+  <label for="export-filter" style="color:#f0f0f0; font-weight:700; margin-right:10px;">Export:</label>
+  <select id="export-filter" aria-label="Select matricules to export">
+    <option value="all">All matricules</option>
+    <option value="expired">Expired matricules</option>
+    <option value="valid">Valid matricules</option>
+  </select>
+  <button id="export-btn">Export CSV</button>
+</div>
+
+<script>
+
+// Matricules list
+const matricules = [
+  "R 0183 BCW","R 0352 BCM","R 0355 BCM","R 0356 BCM","R 0359 BCM","R 0362 BCM","R 0364 BCM","R 1145 BCZ","R 1147 BCZ","R 1148 BCZ","R 1149 BCZ","R 1150 BCZ","R 1152 BCZ","R 1153 BCZ","R 1154 BCZ","R 1157 BCZ","R 1158 BCZ","R 1804 BCX","R 1805 BCX","R 1806 BCX","R 1807 BCX","R 1808 BCX","R 1811 BCX","R 1813 BCX","R 1816 BCX","R 1819 BCX","R 2472 BBY","R 2474 BBY","R 2479 BBY","R 2481 BBY","R 2484 BBY","R 2486 BBY","R 2722 BBK","R 2723 BBK","R 2824 BBL","R 2828 BBL","R 2829 BBL","R 2830 BBL","R 2831 BBL","R 2832 BBL","R 2833 BBL","R 2834 BBL","R 2871 BBV","R 2879 BBV","R 2880 BBV","R 2881 BBV","R 2883 BBV","R 2884 BBV","R 2885 BBV","R 2888 BBV","R 2983 BCK","R 3006 BCK","R 3026 BCK","R 3925 BCJ","R 4144 BCZ","R 4147 BCZ","R 4148 BCZ","R 4150 BCZ","R 4152 BCZ","R 4153 BCZ","R 4154 BCZ","R 4162 BCB","R 4167 BCB","R 4170 BCB","R 4174 BCB","R 4176 BCB","R 4241 BCJ","R 4420 BBY","R 4422 BBY","R 4655 BBY","R 4661 BBY","R 5541 BBY","R 5542 BBY","R 6511 BCS","R 6513 BCS","R 7011 BCT","R 2882 BBV","R 2887 BBV","R 3007 BCK","R 4146 BCZ","R 4151 BCZ","R 4155 BCZ","R 4171 BCB","R 4419 BBY","R 4657 BBY","R 5544 BBY","R 7012 BCT","R 7014 BCT","R 7015 BCT","R 7016 BCT","R 7017 BCT","R 7018 BCT","R 7019 BCT","R 7021 BCT","R 7087 BCT","R 7091 BCT","R 7938 BCM","R 7941 BCM","R 7960 BCM","R 7962 BCM","R 7968 BCM","R 7972 BCM","R 7973 BCM","R 7995 BCM","R 7997 BCM","R 8004 BCM","R 8009 BCM","R 8021 BCM","R 8042 BCM","R 8298 BCM","R 8299 BCM","R 9285 BCW","R 9295 BCW","R 9305 BCW","R 9306 BCW","R 9307 BCW","R 9308 BCW","R 9313 BCW","R9315BCW","R 1777 BDD","R 9309 BCW","R1802BCX","R 9311 BCW","R6040BDB"
+];
+
+const grid = document.getElementById('grid');
+let expandedBox = null;
+
+// Load saved data from localStorage or initialize empty
+let savedData = JSON.parse(localStorage.getItem('matriculeData') || '{}');
+
+// Utility: format date to YYYY-MM-DD for input[type=date]
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return '';
+  return d.toISOString().slice(0,10);
+}
+
+// Utility: check if date is expired (before today)
+function isExpired(dateStr) {
+  if (!dateStr) return false;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const d = new Date(dateStr);
+  return d < today;
+}
+
+// Create box element for matricule
+function createBox(matricule) {
+  const box = document.createElement('div');
+  box.classList.add('box');
+  box.setAttribute('tabindex', '0');
+  box.setAttribute('role', 'button');
+  box.setAttribute('aria-expanded', 'false');
+  box.setAttribute('aria-label', `Matricule ${matricule}`);
+
+  const data = savedData[matricule] || {};
+  const dateStr = data.validationDate || '';
+  const fileName = data.fileName || '';
+
+  // Determine box color
+  if (!dateStr) {
+    box.classList.add('grey');
+  } else if (isExpired(dateStr)) {
+    box.classList.add('red');
+  } else {
+    box.classList.add('green');
+  }
+
+  // Display matricule and date
+  const matriculeEl = document.createElement('div');
+  matriculeEl.className = 'matricule';
+  matriculeEl.textContent = matricule;
+  box.appendChild(matriculeEl);
+
+  const dateEl = document.createElement('div');
+  dateEl.className = 'date';
+  dateEl.textContent = dateStr ? `Valid until: ${dateStr}` : 'No validation date';
+  box.appendChild(dateEl);
+
+  // Edit section (hidden by default)
+  const editSection = document.createElement('div');
+  editSection.className = 'edit-section';
+
+  // Date input
+  const dateLabel = document.createElement('label');
+  dateLabel.textContent = 'Validation End Date:';
+  dateLabel.setAttribute('for', `date-input-${matricule}`);
+  editSection.appendChild(dateLabel);
+
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.id = `date-input-${matricule}`;
+  dateInput.value = formatDate(dateStr);
+  editSection.appendChild(dateInput);
+
+  // File upload
+  const fileLabel = document.createElement('label');
+  fileLabel.textContent = 'Upload validation paper (PDF/JPG):';
+  fileLabel.setAttribute('for', `file-input-${matricule}`);
+  editSection.appendChild(fileLabel);
+
+  const fileInput = document.createElement('input');
+  fileInput.type = 'file';
+  fileInput.accept = '.pdf,image/jpeg,image/png';
+  fileInput.id = `file-input-${matricule}`;
+  editSection.appendChild(fileInput);
+
+  // View file link (if file exists)
+  const viewFileLink = document.createElement('span');
+  viewFileLink.className = 'view-file';
+  viewFileLink.style.display = fileName ? 'inline' : 'none';
+  viewFileLink.textContent = 'View File';
+  viewFileLink.tabIndex = 0;
+  viewFileLink.setAttribute('role', 'link');
+  viewFileLink.setAttribute('aria-label', `View uploaded file for ${matricule}`);
+  editSection.appendChild(viewFileLink);
+
+  // Buttons container
+  const btnSave = document.createElement('button');
+  btnSave.textContent = 'Save';
+
+  const btnCancel = document.createElement('button');
+  btnCancel.textContent = 'Cancel';
+
+  editSection.appendChild(btnSave);
+  editSection.appendChild(btnCancel);
+
+  box.appendChild(editSection);
+
+  // Event: View file
+  viewFileLink.addEventListener('click', () => {
+    if (!fileName) return;
+    const fileData = savedData[matricule]?.fileData;
+    if (!fileData) {
+      alert('No file data found.');
+      return;
+    }
+    // Open file in new tab
+    const blob = dataURLtoBlob(fileData);
+    const url = URL.createObjectURL(blob);
+    window.open(url, '_blank');
+  });
+  viewFileLink.addEventListener('keypress', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      viewFileLink.click();
+    }
+  });
+
+  // Event: Expand box on click or keyboard enter/space
+  function expandBox() {
+    if (expandedBox && expandedBox !== box) collapseBox(expandedBox);
+    if (box.classList.contains('expanded')) {
+      collapseBox(box);
+    } else {
+      box.classList.add('expanded');
+      box.setAttribute('aria-expanded', 'true');
+      expandedBox = box;
+    }
+  }
+  box.addEventListener('click', e => {
+    if (!box.classList.contains('expanded')) {
+      expandBox();
+    }
+  });
+  box.addEventListener('keypress', e => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      expandBox();
+    }
+  });
+
+  // Save button
+  btnSave.addEventListener('click', e => {
+    e.stopPropagation();
+    const newDate = dateInput.value;
+    savedData[matricule] = savedData[matricule] || {};
+    savedData[matricule].validationDate = newDate;
+
+    // Save file if selected
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        savedData[matricule].fileData = evt.target.result;
+        savedData[matricule].fileName = file.name;
+        localStorage.setItem('matriculeData', JSON.stringify(savedData));
+        updateBox(box, matricule);
+        alert('Saved successfully!');
+        collapseBox(box);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      localStorage.setItem('matriculeData', JSON.stringify(savedData));
+      updateBox(box, matricule);
+      alert('Saved successfully!');
+      collapseBox(box);
+    }
+  });
+
+  // Cancel button
+  btnCancel.addEventListener('click', e => {
+    e.stopPropagation();
+    collapseBox(box);
+  });
+
+  // Clicking outside box collapses it
+  document.addEventListener('click', e => {
+    if (expandedBox && !expandedBox.contains(e.target)) {
+      collapseBox(expandedBox);
+    }
+  });
+
+  return box;
+}
+
+// Collapse box
+function collapseBox(box) {
+  box.classList.remove('expanded');
+  box.setAttribute('aria-expanded', 'false');
+  expandedBox = null;
+  // Reset inputs to saved values
+  const matricule = box.querySelector('.matricule').textContent;
+  const data = savedData[matricule] || {};
+  const dateInput = box.querySelector('input[type=date]');
+  if (dateInput) dateInput.value = formatDate(data.validationDate);
+  const fileInput = box.querySelector('input[type=file]');
+  if (fileInput) fileInput.value = '';
+}
+
+// Update box color and date display after save
+function updateBox(box, matricule) {
+  const data = savedData[matricule] || {};
+  const dateStr = data.validationDate || '';
+  const dateEl = box.querySelector('.date');
+  dateEl.textContent = dateStr ? `Valid until: ${dateStr}` : 'No validation date';
+
+  box.classList.remove('red', 'green', 'grey');
+  if (!dateStr) {
+    box.classList.add('grey');
+  } else if (isExpired(dateStr)) {
+    box.classList.add('red');
+  } else {
+    box.classList.add('green');
+  }
+
+  // Show or hide view file link
+  const viewFileLink = box.querySelector('.view-file');
+  if (data.fileName) {
+    viewFileLink.style.display = 'inline';
+  } else {
+    viewFileLink.style.display = 'none';
+  }
+}
+
+// Convert base64 dataURL to Blob
+function dataURLtoBlob(dataurl) {
+  const arr = dataurl.split(',');
+  const mime = arr[0].match(/:(.*?);/)[1];
+  const bstr = atob(arr[1]);
+  let n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  while(n--) {
+    u8arr[n] = bstr.charCodeAt(n);
+  }
+  return new Blob([u8arr], {type:mime});
+}
+
+// Render all boxes
+function renderGrid() {
+  grid.innerHTML = '';
+  matricules.forEach(matricule => {
+    const box = createBox(matricule);
+    grid.appendChild(box);
+  });
+}
+
+renderGrid();
+
+// Export CSV
+function exportCSV(filter) {
+  let rows = [['Matricule', 'Validation Date', 'Status']];
+  const today = new Date();
+  today.setHours(0,0,0,0);
+
+  matricules.forEach(matricule => {
+    const data = savedData[matricule] || {};
+    const dateStr = data.validationDate || '';
+    let status = 'No Date';
+    if (!dateStr) status = 'No Date';
+    else {
+      const d = new Date(dateStr);
+      status = d < today ? 'Expired' : 'Valid';
+    }
+    if (filter === 'all' || (filter === 'expired' && status === 'Expired') || (filter === 'valid' && status === 'Valid')) {
+      rows.push([matricule, dateStr, status]);
+    }
+  });
+
+  // Convert to CSV string
+  const csvContent = rows.map(e => e.map(a => `"${a}"`).join(',')).join('\n');
+
+  // Create download link
+  const blob = new Blob([csvContent], {type: 'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `matricules_${filter}_${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+document.getElementById('export-btn').addEventListener('click', () => {
+  const filter = document.getElementById('export-filter').value;
+  exportCSV(filter);
+});
+const searchInput = document.getElementById('searchInput');
+
+searchInput.addEventListener('input', () => {
+  const filter = searchInput.value.trim().toUpperCase();
+  const boxes = grid.querySelectorAll('.box');
+
+  boxes.forEach(box => {
+    const matricule = box.querySelector('.matricule').textContent.toUpperCase();
+    if (matricule.includes(filter)) {
+      box.style.display = '';
+    } else {
+      box.style.display = 'none';
+      // Also collapse if expanded and hidden
+      if (box.classList.contains('expanded')) {
+        collapseBox(box);
+      }
+    }
+  });
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Company File Access</title>
+<style>
+  /* Reset & Base */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body, html {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: url('https://cdn.pixabay.com/photo/2017/07/23/16/25/container-2531812_1280.jpg') no-repeat center center fixed;
+  background-size: cover;
+  color: #f0f0f0;
+  overflow: hidden;
+}
+
+/* DateTime Badge */
+#datetime {
+  position: fixed;
+  top: 15px;
+  right: 15px;
+  font-size: 14px;
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 8px 16px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  backdrop-filter: blur(4px);
+  user-select: none;
+  z-index: 9999;
+  transition: background 0.3s, transform 0.2s;
+}
+
+#datetime:hover {
+  background: rgba(0, 0, 0, 0.6);
+  transform: translateY(-2px);
+}
+
+/* Intro Screen */
+#intro-screen {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  opacity: 1;
+  transition: opacity 1s ease;
+  backdrop-filter: blur(8px);
+}
+
+#intro-screen.fade-out {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#intro-screen img {
+  max-width: 50vw;
+  max-height: 50vh;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+  border-radius: 20px;
+  transition: transform 0.3s;
+}
+
+#intro-screen img:hover {
+  transform: scale(1.05);
+}
+
+/* Main Container */
+#main-container {
+  display: none;
+  height: 100vh;
+  padding: 40px 30px;
+  overflow-y: auto;
+  backdrop-filter: blur(4px);
+  background: rgba(255, 255, 255, 0.05);
+  transition: background 0.3s;
+}
+
+/* Header / Title */
+#menu h1 {
+  font-size: 3rem;
+  margin-bottom: 50px;
+  font-weight: 800;
+  text-align: center;
+  color: #f0f0f0;
+  text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  letter-spacing: 2px;
+}
+
+/* Buttons */
+.menu-btn {
+  display: block;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  border: none;
+  border-radius: 15px;
+  color: #f0f0f0;
+  font-size: 1.6rem;
+  font-weight: 700;
+  padding: 20px 0;
+  margin: 20px auto;
+  width: 80%;
+  max-width: 340px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  transition: all 0.3s ease;
+  letter-spacing: 1px;
+  backdrop-filter: blur(4px);
+}
+
+.menu-btn:hover {
+  background: linear-gradient(135deg, #89f7fe, #66a6ff);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* Back Button */
+#back-btn {
+  background: linear-gradient(135deg, #0f2027, #203a43);
+  border: none;
+  border-radius: 12px;
+  color: #a0f0c0;
+  font-weight: 700;
+  padding: 12px 24px;
+  margin-bottom: 20px;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  font-size: 1.2rem;
+  transition: background 0.3s, box-shadow 0.3s;
+}
+
+#back-btn:hover {
+  background: linear-gradient(135deg, #1f3c88, #2c3e50);
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+}
+
+/* Reference Table Styles */
+#reference-table {
+  width: 90%;
+  max-width: 950px;
+  margin: 0 auto 50px auto;
+  border-collapse: separate;
+  border-spacing: 0;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+  background: rgba(255,255,255,0.1);
+  backdrop-filter: blur(8px);
+  color: #f0f0f0;
+}
+
+#reference-table th, #reference-table td {
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  text-align: left;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
+}
+
+#reference-table th {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #fff;
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+#reference-table tr:hover {
+  background: rgba(255,255,255,0.2);
+  cursor: pointer;
+  transform: translateY(-2px);
+}
+
+#reference-table a {
+  color: #66a6ff;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+#reference-table a:hover {
+  text-decoration: underline;
+}
+
+/* Table container for scroll */
+#table-container {
+  max-height: 70vh;
+  overflow-y: auto;
+  margin-top: 20px;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+/* Search Bar Container */
+#search-container {
+  max-width: 950px;
+  margin: 0 auto 20px auto;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* Search Input */
+#searchInput {
+  width: 60%;
+  max-width: 400px;
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  border-radius: 10px;
+  border: 2px solid #66a6ff;
+  outline: none;
+  background: rgba(255,255,255,0.1);
+  color: #f0f0f0;
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+
+#searchInput:focus {
+  border-color: #89f7fe;
+  box-shadow: 0 0 8px #89f7fe;
+}
+
+/* Buttons for Search & Clear */
+#searchButton, #clearSearchButton {
+  padding: 12px 20px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: #f0f0f0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  transition: all 0.3s ease;
+}
+
+#searchButton:hover, #clearSearchButton:hover {
+  background: linear-gradient(135deg, #89f7fe, #66a6ff);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+}
+
+/* Additional hover effects for better interactivity can be added as desired */
+
+</style>
+</head>
+<body>
+
+<div id="datetime" aria-live="polite"></div>
+
+<!-- Intro Logo Screen -->
+<div id="intro-screen" aria-label="Company Logo Intro">
+  <img src="https://i.imgur.com/9ePBWYP.png" alt="Company Logo" />
+</div>
+
+<!-- Main Content -->
+<div id="main-container" role="main" aria-live="polite">
+
+  <!-- Menu -->
+  <div id="menu" role="navigation" aria-label="Main Menu">
+    <h1>Company File Access</h1>
+    <button class="menu-btn" id="btn-cartes">CARTES GRISES</button>
+    <button class="menu-btn" id="btn-newcart">New cart grese</button>
+    <button class="menu-btn" id="btn-newcart" onclick="window.location.href='new page .html';">la visite</button>
+  </div>
+
+  <!-- References Section -->
+  <div id="references-section" style="display:none;">
+    <button id="back-btn" aria-label="Back to menu">← Back</button>
+    <h2 id="section-title" style="text-align:center; margin-bottom: 20px;"></h2>
+
+    <!-- Search Bar -->
+    <div id="search-container" role="search" aria-label="Search references">
+      <input type="text" id="searchInput" placeholder="Search references..." aria-label="Search references" />
+      <button id="searchButton" aria-label="Search">Search</button>
+      <button id="clearSearchButton" aria-label="Clear search">Clear</button>
+    </div>
+
+    <div id="table-container">
+      <table id="reference-table" aria-describedby="section-title" role="table" tabindex="0">
+        <thead>
+          <tr><th>Reference</th><th>Action</th></tr>
+        </thead>
+        <tbody id="reference-tbody">
+          <!-- Filled dynamically -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // Show current date/time, updated every second
+  function updateDateTime() {
+    const now = new Date();
+    const options = {weekday:'long', year:'numeric', month:'long', day:'numeric'};
+    const dateStr = now.toLocaleDateString(undefined, options);
+    const timeStr = now.toLocaleTimeString(undefined, {hour12:false});
+    document.getElementById('datetime').textContent = `${dateStr}, ${timeStr}`;
+  }
+  updateDateTime();
+  setInterval(updateDateTime, 1000);
+
+  // Logo intro fade out after 2 seconds
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      const intro = document.getElementById('intro-screen');
+      intro.classList.add('fade-out');
+      setTimeout(() => {
+        intro.style.display = 'none';
+        document.getElementById('main-container').style.display = 'block';
+      }, 1000);
+    }, 2000);
+  });
+
+  // Data for references and paths
+  const data = {
+    "CARTES GRISES": {
+      basePath: "file:///C:/Users/AHMED/Documents/CARTES%20GRISES/",
+      references: [
+        "Nueva carpeta",
+        "R 0183 BCW",
+        "R 0352 BCM",
+        "R 0355 BCM",
+        "R 0356 BCM",
+        "R 0359 BCM",
+        "R 0362 BCM",
+        "R 0364 BCM",
+        "R 1145 BCZ",
+        "R 1147 BCZ",
+        "R 1148 BCZ",
+        "R 1149 BCZ",
+        "R 1150 BCZ",
+        "R 1152 BCZ",
+        "R 1153 BCZ",
+        "R 1154 BCZ",
+        "R 1157 BCZ",
+        "R 1158 BCZ",
+        "R 1804 BCX",
+        "R 1805 BCX",
+        "R 1806 BCX",
+        "R 1807 BCX",
+        "R 1808 BCX",
+        "R 1811 BCX",
+        "R 1813 BCX",
+        "R 1816 BCX",
+        "R 1819 BCX",
+        "R 2472 BBY",
+        "R 2474 BBY",
+        "R 2479 BBY",
+        "R 2481 BBY",
+        "R 2484 BBY",
+        "R 2486 BBY",
+        "R 2722 BBK",
+        "R 2723 BBK",
+        "R 2824 BBL",
+        "R 2828 BBL",
+        "R 2829 BBL",
+        "R 2830 BBL",
+        "R 2831 BBL",
+        "R 2832 BBL",
+        "R 2833 BBL",
+        "R 2834 BBL",
+        "R 2871 BBV",
+        "R 2879 BBV",
+        "R 2880 BBV",
+        "R 2881 BBV",
+        "R 2883 BBV",
+        "R 2884 BBV",
+        "R 2885 BBV",
+        "R 2888 BBV",
+        "R 2983 BCK",
+        "R 3006 BCK",
+        "R 3026 BCK",
+        "R 3925 BCJ",
+        "R 4144 BCZ",
+        "R 4147 BCZ",
+        "R 4148 BCZ",
+        "R 4150 BCZ",
+        "R 4152 BCZ",
+        "R 4153 BCZ",
+        "R 4154 BCZ",
+        "R 4162 BCB",
+        "R 4167 BCB",
+        "R 4170 BCB",
+        "R 4174 BCB",
+        "R 4176 BCB",
+        "R 4241 BCJ",
+        "R 4420 BBY",
+        "R 4422 BBY",
+        "R 4655 BBY",
+        "R 4661 BBY",
+        "R 5541 BBY",
+        "R 5542 BBY",
+        "R 6511 BCS",
+        "R 6513 BCS",
+        "R 7011 BCT",
+        "R 2882 BBV",
+        "R 2887 BBV",
+        "R 3007 BCK",
+        "R 4146 BCZ",
+        "R 4151 BCZ",
+        "R 4155 BCZ",
+        "R 4171 BCB",
+        "R 4419 BBY",
+        "R 4657 BBY",
+        "R 5544 BBY",
+        "R 7012 BCT",
+        "R 7014 BCT",
+        "R 7015 BCT",
+        "R 7016 BCT",
+        "R 7017 BCT",
+        "R 7018 BCT",
+        "R 7019 BCT",
+        "R 7021 BCT",
+        "R 7087 BCT",
+        "R 7091 BCT",
+        "R 7938 BCM",
+        "R 7941 BCM",
+        "R 7960 BCM",
+        "R 7962 BCM",
+        "R 7968 BCM",
+        "R 7972 BCM",
+        "R 7973 BCM",
+        "R 7995 BCM",
+        "R 7997 BCM",
+        "R 8004 BCM",
+        "R 8009 BCM",
+        "R 8021 BCM",
+        "R 8042 BCM",
+        "R 8298 BCM",
+        "R 8299 BCM",
+        "R 9285 BCW",
+        "R 9295 BCW",
+        "R 9305 BCW",
+        "R 9306 BCW",
+        "R 9307 BCW",
+        "R 9308 BCW",
+        "R 9313 BCW",
+        "R9315BCW",
+        "R 1777 BDD",
+        "R 9309 BCW",
+        "R1802BCX",
+        "SKM_224e21052417551",
+        "R 9311 BCW",
+        "R6040BDB"
+      ],
+      type: "folder"
+    },
+    "New cart grese": {
+      basePath: "file:///C:/Users/AHMED/Documents/New%20cart%20grese/",
+      references: [
+        "R 0352 BCM",
+        "R 0364 BCM",
+        "R 0355 BCM",
+        "R 1145 BCZ -2",
+        "R 1145 BCZ",
+        "R 1147 BCZ",
+        "R 1148 BCZ-2",
+        "R 1148 BCZ",
+        "R 1149 BCZ",
+        "R 1150 BCZ",
+        "R 1157 BCZ",
+        "R 1158 BCZ",
+        "R 1802 BCX",
+        "R 0356 BCM",
+        "R 1152 BCZ",
+        "R 0359 BCM",
+        "R 1147 BCZ -2",
+        "R 1148 BCZ-2",
+        "R 1154 BCZ",
+        "R 1804 BCX",
+        "R 1805 BCX",
+        "R 1806 BCX",
+        "R 1807 BCX",
+        "R 1808 BCX",
+        "R 1811 BCX",
+        "R 1813 BCX",
+        "R 1816 BCX",
+        "R 1819 BCX",
+        "R 3006 BCK",
+        "R 3007 BCK",
+        "R 3026 BCK",
+        "R 4144 BCZ",
+        "R 4146 BCZ",
+        "R 4147 BCZ",
+        "R 4148 BCZ",
+        "R 4150 BCZ",
+        "R 4151 BCZ",
+        "R 4152 BCZ",
+        "R 4153 BCZ",
+        "R 4154 BCZ",
+        "R 4155 BCZ",
+        "R 4167 BCB",
+        "R 4170 BCB",
+        "R 6511 BCS",
+        "R 7011 BCT",
+        "R 7013 BCT",
+        "R 7015 BCT",
+        "R 7017 BCT",
+        "R 7018 BCT",
+        "R 7019 BCT",
+        "R 7021 BCT",
+        "R 7087 BCT",
+        "R 7091 BCT",
+        "R 9295 BCW",
+        "R 9305 BCW",
+        "R 9306 BCW",
+        "R 7016 BCT",
+        "R 7020 BCT",
+        "R 9285 BCW",
+        "R 9307 BCW",
+        "R 9308 BCW",
+        "R 9309 BCW",
+        "R 9311 BCW",
+        "R 9313 BCW",
+        "R 9315 BCW",
+        "R1153 BCZ"
+      ],
+      type: "pdf"
+    }
+  };
+
+  // Elements
+  const menu = document.getElementById('menu');
+  const referencesSection = document.getElementById('references-section');
+  const sectionTitle = document.getElementById('section-title');
+  const referenceTbody = document.getElementById('reference-tbody');
+  const backBtn = document.getElementById('back-btn');
+  const searchInput = document.getElementById('searchInput');
+  const searchButton = document.getElementById('searchButton');
+  const clearSearchButton = document.getElementById('clearSearchButton');
+
+  // Helper: encode reference for URL (spaces to %20)
+  function encodeRef(ref) {
+    return encodeURIComponent(ref).replace(/%20/g, '%20');
+  }
+
+  // Show references table for selected option
+  function showReferences(optionName) {
+    sectionTitle.textContent = optionName;
+    referenceTbody.innerHTML = ''; // clear old rows
+    searchInput.value = ''; // clear search input
+
+    const optionData = data[optionName];
+    if (!optionData) return;
+
+    optionData.references.forEach(ref => {
+      const tr = document.createElement('tr');
+
+      // Reference name cell
+      const tdRef = document.createElement('td');
+      tdRef.textContent = ref;
+      tr.appendChild(tdRef);
+
+      // Action cell with link or folder open
+      const tdAction = document.createElement('td');
+      const link = document.createElement('a');
+      link.href = '#';
+      link.textContent = optionData.type === 'folder' ? 'Open Folder' : 'Open PDF';
+      link.setAttribute('aria-label', `${optionData.type === 'folder' ? 'Open folder' : 'Open PDF'} for ${ref}`);
+
+      // On click: open folder or PDF
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        // Compose full path
+        let path = optionData.basePath;
+        if (optionData.type === 'folder') {
+          // Folder path ends with slash + encoded folder name + slash
+          path += encodeRef(ref) + '/';
+        } else {
+          // PDF path ends with slash + encoded file name + ".pdf"
+          path += encodeRef(ref) + '.pdf';
+        }
+        // Open in new tab/window
+        window.open(path, '_blank');
+      });
+
+      tdAction.appendChild(link);
+      tr.appendChild(tdAction);
+
+      referenceTbody.appendChild(tr);
+    });
+
+    menu.style.display = 'none';
+    referencesSection.style.display = 'block';
+  }
+
+  // Search function (skip header row)
+  function filterTable() {
+    const filter = searchInput.value.toUpperCase();
+    const rows = document.querySelectorAll('#reference-table tbody tr');
+    rows.forEach(row => {
+      const td = row.getElementsByTagName('td')[0];
+      if (td) {
+        const txtValue = td.textContent || td.innerText;
+        row.style.display = txtValue.toUpperCase().includes(filter) ? '' : 'none';
+      }
+    });
+  }
+
+  // Event listeners for menu buttons
+  document.getElementById('btn-cartes').addEventListener('click', () => {
+    showReferences("CARTES GRISES");
+  });
+  document.getElementById('btn-newcart').addEventListener('click', () => {
+    showReferences("New cart grese");
+  });
+
+  // Back button returns to menu
+  backBtn.addEventListener('click', () => {
+    referencesSection.style.display = 'none';
+    menu.style.display = 'block';
+  });
+
+  // Search input live filter
+  searchInput.addEventListener('input', filterTable);
+
+  // Search button click filter
+  searchButton.addEventListener('click', filterTable);
+
+  // Clear search button
+  clearSearchButton.addEventListener('click', () => {
+    searchInput.value = '';
+    filterTable();
+    searchInput.focus();
+  });
+</script>
+
+</body>
+</html>
